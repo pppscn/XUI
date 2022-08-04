@@ -124,6 +124,18 @@ public class CountDownButtonHelper {
 
     }
 
+    /**
+     * 结束倒计时
+     */
+    public void finish() {
+        mListener.onCountDown(0);
+        mButton.setEnabled(true);
+        if (mListener != null) {
+            mListener.onFinished();
+        } else {
+            mButton.setText(mButton.getResources().getString(R.string.xui_count_down_finish));
+        }
+    }
 
     /**
      * 取消倒计时
