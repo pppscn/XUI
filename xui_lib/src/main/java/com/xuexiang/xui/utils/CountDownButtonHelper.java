@@ -128,7 +128,7 @@ public class CountDownButtonHelper {
      * 结束倒计时
      */
     public void finish() {
-        mListener.onCountDown(0);
+        cancel();
         mButton.setEnabled(true);
         if (mListener != null) {
             mListener.onFinished();
