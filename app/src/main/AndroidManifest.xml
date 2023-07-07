@@ -45,6 +45,7 @@
         <activity
             android:name=".activity.SplashActivity"
             android:configChanges="screenSize|keyboardHidden|orientation|keyboard"
+            android:exported="true"
             android:theme="@style/XUITheme.Launch.Demo"
             android:windowSoftInputMode="adjustPan|stateHidden">
             <intent-filter>
@@ -92,6 +93,7 @@
         <activity
             android:name=".base.webview.AgentWebActivity"
             android:configChanges="screenSize|keyboardHidden|orientation|keyboard"
+            android:exported="true"
             android:hardwareAccelerated="true"
             android:label="@string/app_browser_name"
             android:launchMode="singleTask"
@@ -144,6 +146,10 @@
         <!--fragment的页面容器-->
         <activity
             android:name=".base.BaseActivity"
+            android:configChanges="screenSize|keyboardHidden|orientation|keyboard|locale|layoutDirection"
+            android:windowSoftInputMode="adjustPan|stateHidden" />
+        <activity
+            android:name=".activity.MaterialDesignThemeActivity"
             android:configChanges="screenSize|keyboardHidden|orientation|keyboard|locale|layoutDirection"
             android:windowSoftInputMode="adjustPan|stateHidden" />
         <activity
@@ -208,6 +214,7 @@
         <!--创建快捷方式的广播监听-->
         <receiver
             android:name=".fragment.utils.shortcut.ShortcutReceiver"
+            android:exported="true"
             android:permission="com.android.launcher.permission.INSTALL_SHORTCUT">
             <intent-filter>
                 <action android:name="com.android.launcher.action.INSTALL_SHORTCUT" />
@@ -215,7 +222,9 @@
         </receiver>
 
         <!--创建快捷方式-->
-        <activity android:name=".fragment.utils.shortcut.CreateShortcutResultIntentActivity">
+        <activity
+            android:name=".fragment.utils.shortcut.CreateShortcutResultIntentActivity"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.CREATE_SHORTCUT" />
             </intent-filter>

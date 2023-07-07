@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://ss.im5i.com/2021/06/14/65G07.png" width="388" height="321" alt="Banner" />
+  <img src="https://raw.githubusercontent.com/xuexiangjys/XUI/master/art/app_logo_xui.png" width="388" height="321" alt="Banner" />
 </p>
 
 # XUI
@@ -78,7 +78,7 @@ allprojects {
 dependencies {
   ...
   //androidx项目
-  implementation 'com.github.xuexiangjys:XUI:1.1.9'
+  implementation 'com.github.xuexiangjys:XUI:1.2.1'
 
   implementation 'androidx.appcompat:appcompat:1.3.1'
   implementation 'androidx.recyclerview:recyclerview:1.2.1'

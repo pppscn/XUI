@@ -79,7 +79,7 @@ public class DemoDataProvider {
 
     private static List<AdapterItem> getGridItems(Context context, int titleArrayId, int iconArrayId) {
         List<AdapterItem> list = new ArrayList<>();
-        String[] titles = ResUtils.getStringArray(titleArrayId);
+        String[] titles = ResUtils.getStringArray(context, titleArrayId);
         Drawable[] icons = ResUtils.getDrawableArray(context, iconArrayId);
         for (int i = 0; i < titles.length; i++) {
             list.add(new AdapterItem(titles[i], icons[i]));
@@ -436,6 +436,10 @@ public class DemoDataProvider {
      */
     @MemoryCache
     public static List<NewInfo> getDemoNewInfos() {
+        return getRefreshDemoNewInfos();
+    }
+
+    public static List<NewInfo> getRefreshDemoNewInfos() {
         List<NewInfo> list = new ArrayList<>();
         list.add(new NewInfo("公众号", "X-Library系列文章视频介绍")
                 .setSummary("获取更多咨询，欢迎点击关注公众号:【我的Android开源之旅】，里面有一整套X-Library系列文章视频介绍！\n")

@@ -71,6 +71,8 @@ public class LoginFragment extends BaseFragment {
     @BindView(R.id.btn_login)
     SuperButton btnLogin;
 
+    private View mJumpView;
+
     private CountDownButtonHelper mCountDownHelper;
 
     @Override
@@ -85,6 +87,13 @@ public class LoginFragment extends BaseFragment {
         titleBar.setBackgroundColor(Color.TRANSPARENT);
         titleBar.setTitle("");
         titleBar.setLeftImageDrawable(DrawableUtils.setTint(ResUtils.getVectorDrawable(getContext(), R.drawable.ic_login_close), ThemeUtils.getMainThemeColor(getContext())));
+        titleBar.setActionTextColor(ThemeUtils.resolveColor(getContext(), R.attr.colorAccent));
+        mJumpView = titleBar.addAction(new TitleBar.TextAction(R.string.xui_jump) {
+            @Override
+            public void performAction(View view) {
+                onLoginSuccess();
+            }
+        });
         return titleBar;
     }
 
@@ -93,7 +102,8 @@ public class LoginFragment extends BaseFragment {
         mCountDownHelper = new CountDownButtonHelper(btnGetVerifyCode, 60);
         //隐私政策弹窗
         SettingSPUtils spUtils = SettingSPUtils.getInstance();
-        if (!spUtils.isAgreePrivacy()) {
+        boolean isAgreePrivacy = spUtils.isAgreePrivacy();
+        if (!isAgreePrivacy) {
             PrivacyUtils.showPrivacyDialog(getContext(), (dialog, which) -> {
                 dialog.dismiss();
                 spUtils.setIsAgreePrivacy(true);
@@ -104,10 +114,10 @@ public class LoginFragment extends BaseFragment {
         }
         cbProtocol.setOnCheckedChangeListener((buttonView, isChecked) -> {
             spUtils.setIsAgreePrivacy(isChecked);
-            ViewUtils.setEnabled(btnLogin, isChecked);
+            refreshButton(isChecked);
         });
-        ViewUtils.setEnabled(btnLogin, spUtils.isAgreePrivacy());
-        ViewUtils.setChecked(cbProtocol, spUtils.isAgreePrivacy());
+        ViewUtils.setChecked(cbProtocol, isAgreePrivacy);
+        refreshButton(isAgreePrivacy);
     }
 
     @SingleClick
@@ -133,14 +143,19 @@ public class LoginFragment extends BaseFragment {
                 XToastUtils.info("忘记密码");
                 break;
             case R.id.tv_user_protocol:
-                openPage(ServiceProtocolFragment.class, KEY_PROTOCOL_TITLE, ResUtils.getString(R.string.title_user_protocol));
+                openPage(ServiceProtocolFragment.class, KEY_PROTOCOL_TITLE, ResUtils.getString(getContext(), R.string.title_user_protocol));
                 break;
             case R.id.tv_privacy_protocol:
-                openPage(ServiceProtocolFragment.class, KEY_PROTOCOL_TITLE, ResUtils.getString(R.string.title_privacy_protocol));
+                openPage(ServiceProtocolFragment.class, KEY_PROTOCOL_TITLE, ResUtils.getString(getContext(), R.string.title_privacy_protocol));
                 break;
             default:
                 break;
         }
+    }
+
+    private void refreshButton(boolean isChecked) {
+        ViewUtils.setEnabled(btnLogin, isChecked);
+        ViewUtils.setEnabled(mJumpView, isChecked);
     }
 
     /**
@@ -160,6 +175,13 @@ public class LoginFragment extends BaseFragment {
      */
     private void loginByVerifyCode(String phoneNumber, String verifyCode) {
         // TODO: 2019-11-18 这里只是界面演示而已
+        onLoginSuccess();
+    }
+
+    /**
+     * 登录成功的处理
+     */
+    private void onLoginSuccess() {
         String token = RandomUtils.getRandomNumbersAndLetters(16);
         if (TokenUtils.handleLoginSuccess(token)) {
             popToBack();
