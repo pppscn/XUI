@@ -20,6 +20,8 @@ package com.xuexiang.xui.widget.imageview.strategy.impl;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
+import android.os.Handler;
+import android.os.Looper;
 import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
@@ -34,10 +36,14 @@ import com.bumptech.glide.load.resource.gif.GifDrawable;
 import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.Target;
+import com.bumptech.glide.util.Util;
 import com.xuexiang.xui.widget.imageview.strategy.DiskCacheStrategyEnum;
 import com.xuexiang.xui.widget.imageview.strategy.IImageLoadStrategy;
 import com.xuexiang.xui.widget.imageview.strategy.ILoadListener;
 import com.xuexiang.xui.widget.imageview.strategy.LoadOption;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Glide图片加载策略
@@ -47,11 +53,13 @@ import com.xuexiang.xui.widget.imageview.strategy.LoadOption;
  */
 public class GlideImageLoadStrategy implements IImageLoadStrategy {
 
+    private ExecutorService mDiskIO;
+    private Handler mMainHandler;
+
+
     @Override
     public void loadImage(@NonNull ImageView imageView, Object path) {
-        Glide.with(imageView.getContext())
-                .load(path)
-                .into(imageView);
+        Glide.with(imageView.getContext()).load(path).into(imageView);
     }
 
     /**
@@ -63,30 +71,24 @@ public class GlideImageLoadStrategy implements IImageLoadStrategy {
      */
     @Override
     public void loadImage(@NonNull ImageView imageView, Object path, final @NonNull ILoadListener listener) {
-        Glide.with(imageView.getContext())
-                .load(path)
-                .listener(new RequestListener<Drawable>() {
-                    @Override
-                    public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
-                        listener.onLoadFailed(e);
-                        return false;
-                    }
+        Glide.with(imageView.getContext()).load(path).listener(new RequestListener<Drawable>() {
+            @Override
+            public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
+                listener.onLoadFailed(e);
+                return false;
+            }
 
-                    @Override
-                    public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
-                        listener.onLoadSuccess();
-                        return false;
-                    }
-                })
-                .into(imageView);
+            @Override
+            public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
+                listener.onLoadSuccess();
+                return false;
+            }
+        }).into(imageView);
     }
 
     @Override
     public void loadGifImage(@NonNull ImageView imageView, Object path) {
-        Glide.with(imageView.getContext())
-                .asGif()
-                .load(path)
-                .into(imageView);
+        Glide.with(imageView.getContext()).asGif().load(path).into(imageView);
     }
 
     /**
@@ -98,23 +100,19 @@ public class GlideImageLoadStrategy implements IImageLoadStrategy {
      */
     @Override
     public void loadGifImage(@NonNull ImageView imageView, Object path, final @NonNull ILoadListener listener) {
-        Glide.with(imageView.getContext())
-                .asGif()
-                .load(path)
-                .listener(new RequestListener<GifDrawable>() {
-                    @Override
-                    public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<GifDrawable> target, boolean isFirstResource) {
-                        listener.onLoadFailed(e);
-                        return false;
-                    }
+        Glide.with(imageView.getContext()).asGif().load(path).listener(new RequestListener<GifDrawable>() {
+            @Override
+            public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<GifDrawable> target, boolean isFirstResource) {
+                listener.onLoadFailed(e);
+                return false;
+            }
 
-                    @Override
-                    public boolean onResourceReady(GifDrawable resource, Object model, Target<GifDrawable> target, DataSource dataSource, boolean isFirstResource) {
-                        listener.onLoadSuccess();
-                        return false;
-                    }
-                })
-                .into(imageView);
+            @Override
+            public boolean onResourceReady(GifDrawable resource, Object model, Target<GifDrawable> target, DataSource dataSource, boolean isFirstResource) {
+                listener.onLoadSuccess();
+                return false;
+            }
+        }).into(imageView);
     }
 
     @Override
@@ -225,9 +223,7 @@ public class GlideImageLoadStrategy implements IImageLoadStrategy {
     @SuppressLint("CheckResult")
     @Override
     public void loadImage(@NonNull ImageView imageView, Object path, LoadOption loadOption, final ILoadListener listener) {
-        RequestBuilder<Drawable> builder = Glide.with(imageView.getContext())
-                .load(path)
-                .apply(getRequestOptions(loadOption));
+        RequestBuilder<Drawable> builder = Glide.with(imageView.getContext()).load(path).apply(getRequestOptions(loadOption));
         if (listener != null) {
             builder.listener(new RequestListener<Drawable>() {
                 @Override
@@ -256,10 +252,7 @@ public class GlideImageLoadStrategy implements IImageLoadStrategy {
     @SuppressLint("CheckResult")
     @Override
     public void loadGifImage(@NonNull ImageView imageView, Object path, LoadOption loadOption, final ILoadListener listener) {
-        RequestBuilder<GifDrawable> builder = Glide.with(imageView.getContext())
-                .asGif()
-                .load(path)
-                .apply(getRequestOptions(loadOption));
+        RequestBuilder<GifDrawable> builder = Glide.with(imageView.getContext()).asGif().load(path).apply(getRequestOptions(loadOption));
         if (listener != null) {
             builder.listener(new RequestListener<GifDrawable>() {
                 @Override
@@ -320,9 +313,42 @@ public class GlideImageLoadStrategy implements IImageLoadStrategy {
     }
 
     @Override
-    public void clearCache(Context context) {
-        Glide.get(context).clearMemory();
-        Glide.get(context).clearDiskCache();
+    public void clearCache(final Context context) {
+        if (Util.isOnMainThread()) {
+            Glide.get(context).clearMemory();
+        } else {
+            getMainHandler().post(new Runnable() {
+                @Override
+                public void run() {
+                    Glide.get(context).clearMemory();
+                }
+            });
+        }
+
+        if (Util.isOnBackgroundThread()) {
+            Glide.get(context).clearDiskCache();
+        } else {
+            getDiskIO().execute(new Runnable() {
+                @Override
+                public void run() {
+                    Glide.get(context).clearDiskCache();
+                }
+            });
+        }
+    }
+
+    private Handler getMainHandler() {
+        if (mMainHandler == null) {
+            mMainHandler = new Handler(Looper.getMainLooper());
+        }
+        return mMainHandler;
+    }
+
+    private ExecutorService getDiskIO() {
+        if (mDiskIO == null) {
+            mDiskIO = Executors.newSingleThreadExecutor();
+        }
+        return mDiskIO;
     }
 
     @Override
